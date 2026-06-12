@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gold Positioning Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&display=swap');
+
+:root {
+  --gold:      #C9A84C;
+  --gold-dim:  #8A6F2E;
+  --gold-glow: rgba(201,168,76,0.12);
+  --bg:        #090908;
+  --surface:   #0F0F0E;
+  --surface2:  #141413;
+  --border:    #1E1E1C;
+  --border2:   #2A2A27;
+  --text:      #E5E0D4;
+  --muted:     #5E5C56;
+  --muted2:    #888580;
+  --bull:      #4DB88A;
+  --bear:      #D95F5F;
+  --bull-bg:   rgba(77,184,138,0.10);
+  --bear-bg:   rgba(217,95,95,0.10);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.header {
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.header-title {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 1.9rem;
+  color: var(--gold);
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+.header-sub {
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-top: 5px;
+}
+.header-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.live-dot-wrap {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem; color: var(--bull);
+  letter-spacing: 0.1em;
+}
+.dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--bull);
+  animation: blink 2.2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+#ts {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem; color: var(--muted);
+}
+.btn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: none;
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  padding: 5px 14px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn:hover { background: var(--gold-glow); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── SPOT BAR ── */
+.spot-bar {
+  background: var(--gold-glow);
+  border-bottom: 1px solid var(--gold-dim);
+  padding: 12px 28px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+  overflow: hidden;
+}
+.spot-item {
+  padding: 0 20px;
+  border-right: 1px solid rgba(201,168,76,0.2);
+}
+.spot-item:first-child { padding-left: 0; }
+.spot-item:last-child  { border-right: none; }
+.spot-lbl { font-size: 0.58rem; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.1em; }
+.spot-val { font-family: 'IBM Plex Mono', monospace; font-size: 1.3rem; font-weight: 600; color: var(--gold); margin-top: 1px; }
+.spot-chg { font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; font-weight: 600; }
+.spot-sm  { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; }
+
+/* ── LAYOUT ── */
+.body { padding: 24px 28px 60px; display: flex; flex-direction: column; gap: 24px; }
+
+/* ── SECTION TITLES ── */
+.sec-title {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+}
+.sec-title h2 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.sec-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.55rem; color: var(--muted);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  padding: 2px 8px; border-radius: 2px;
+  white-space: nowrap;
+}
+.sec-rule { height: 1px; background: var(--border); flex: 1; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 16px 18px;
+}
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+
+.lbl { font-size: 0.58rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 5px; }
+.val { font-family: 'IBM Plex Mono', monospace; font-size: 1.25rem; font-weight: 600; }
+.sub { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--muted2); margin-top: 3px; }
+
+.bull { color: var(--bull) !important; }
+.bear { color: var(--bear) !important; }
+.gold { color: var(--gold) !important; }
+
+/* ── COT SENTIMENT BAR ── */
+.sent-bar-wrap { margin-top: 12px; }
+.sent-bar-row {
+  display: flex; justify-content: space-between;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem;
+  margin-bottom: 5px;
+}
+.sent-track {
+  height: 7px; background: var(--bear-bg);
+  border: 1px solid var(--border2); border-radius: 1px; overflow: hidden;
+}
+.sent-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4DB88A 0%, #8BE0B8 100%);
+  transition: width 1s ease;
+}
+.sent-ends {
+  display: flex; justify-content: space-between;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.56rem;
+  color: var(--muted); margin-top: 4px;
+}
+
+/* ── GAUGE ── */
+.gauge-section {
+  display: flex; gap: 24px; flex-wrap: wrap; align-items: center;
+}
+.gauge-wrap { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.gauge-svg  { width: 200px; height: 110px; }
+.gauge-score-label {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic; font-size: 1.4rem;
+  text-align: center; margin-top: 2px;
+}
+.gauge-sub { font-family: 'IBM Plex Mono', monospace; font-size: 0.56rem; color: var(--muted); text-align: center; margin-top: 3px; }
+
+/* ── SIGNAL CARDS ── */
+.signals { display: flex; gap: 10px; flex: 1; flex-wrap: wrap; }
+.sig-card {
+  flex: 1; min-width: 110px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 12px 14px;
+}
+.sig-name { font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 6px; }
+.sig-val  { font-family: 'IBM Plex Mono', monospace; font-size: 0.95rem; font-weight: 600; }
+.sig-sub  { font-size: 0.6rem; color: var(--muted2); margin-top: 4px; }
+
+/* ── ETF TOTALS ── */
+.etf-totals {
+  display: flex; gap: 28px; flex-wrap: wrap;
+  margin-top: 14px; padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.etf-total-item .lbl { margin-bottom: 3px; }
+.etf-total-item .val { font-size: 1.05rem; }
+
+/* ── TABLE ── */
+.tbl { width: 100%; border-collapse: collapse; }
+.tbl th {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.56rem; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 6px 10px; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.tbl td {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem; padding: 8px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  vertical-align: middle;
+}
+.tbl tr:last-child td { border: none; }
+
+.badge {
+  display: inline-block; font-size: 0.5rem; padding: 2px 6px;
+  border-radius: 2px; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.b-live   { background: var(--bull-bg); color: var(--bull); border: 1px solid rgba(77,184,138,0.3); }
+.b-daily  { background: var(--gold-glow); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+.b-weekly { background: var(--surface2); color: var(--muted); border: 1px solid var(--border2); }
+
+/* ── STATUS BAR ── */
+.status-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem;
+  color: var(--muted);
+  padding: 10px 28px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky; bottom: 0;
+}
+.status-ok   { color: var(--bull); }
+.status-err  { color: var(--bear); }
+.status-warn { color: var(--gold); }
+
+/* ── LOADING ── */
+.spin {
+  display: inline-block; width: 12px; height: 12px;
+  border: 2px solid var(--border2); border-top-color: var(--gold);
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+  vertical-align: middle; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: var(--muted); padding: 10px 0; }
+.err     { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--bear); }
+
+/* ── FOOTNOTE ── */
+.fn { font-size: 0.58rem; color: var(--muted); margin-top: 8px; line-height: 1.6; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 680px) {
+  .header, .spot-bar, .body { padding-left: 14px; padding-right: 14px; }
+  .g3, .g4 { grid-template-columns: 1fr 1fr; }
+  .spot-item { padding: 0 12px; }
+}
+@media (max-width: 440px) {
+  .g2, .g3, .g4 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="header-title">Gold Positioning</div>
+    <div class="header-sub">Unified exposure tracker · XAU/USD · All venues</div>
+  </div>
+  <div class="header-right">
+    <div class="live-dot-wrap"><span class="dot"></span>Live Backend</div>
+    <div id="ts">Not loaded</div>
+    <button class="btn" id="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+  </div>
+</div>
+
+<!-- SPOT BAR -->
+<div class="spot-bar">
+  <div class="spot-item">
+    <div class="spot-lbl">XAU/USD Spot</div>
+    <div class="spot-val" id="s-price">—</div>
+  </div>
+  <div class="spot-item">
+    <div class="spot-lbl">24h Change</div>
+    <div class="spot-chg" id="s-chg">—</div>
+  </div>
+  <div class="spot-item">
+    <div class="spot-lbl">Day High</div>
+    <div class="spot-sm gold" id="s-high">—</div>
+  </div>
+  <div class="spot-item">
+    <div class="spot-lbl">Day Low</div>
+    <div class="spot-sm" id="s-low" style="color:var(--muted2)">—</div>
+  </div>
+  <div class="spot-item">
+    <div class="spot-lbl">Data Source</div>
+    <div class="spot-sm" id="s-src" style="color:var(--muted); font-size:0.65rem">—</div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="body">
+
+  <!-- SIGNAL -->
+  <div>
+    <div class="sec-title">
+      <h2>Composite Signal</h2>
+      <span class="sec-tag">All Sources · Weighted</span>
+      <div class="sec-rule"></div>
+    </div>
+    <div class="card">
+      <div class="gauge-section">
+        <div class="gauge-wrap" id="gauge">
+          <div class="loading"><span class="spin"></span>Computing…</div>
+        </div>
+        <div class="signals" id="signals">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COT -->
+  <div>
+    <div class="sec-title">
+      <h2>CFTC · COT Futures Positioning</h2>
+      <span class="sec-tag">COMEX Gold · Official CFTC Data</span>
+      <div class="sec-rule"></div>
+    </div>
+    <div class="g4" id="cot-cards">
+      <div class="card"><div class="loading"><span class="spin"></span>Loading COT…</div></div>
+    </div>
+    <div class="card" style="margin-top:12px" id="cot-bar">
+      <div class="loading"><span class="spin"></span></div>
+    </div>
+  </div>
+
+  <!-- ETF -->
+  <div>
+    <div class="sec-title">
+      <h2>ETF Holdings · Paper Gold</h2>
+      <span class="sec-tag">GLD · IAU · SGOL</span>
+      <div class="sec-rule"></div>
+    </div>
+    <div id="etf-section">
+      <div class="loading"><span class="spin"></span>Loading ETF data…</div>
+    </div>
+  </div>
+
+  <!-- OPEN INTEREST -->
+  <div>
+    <div class="sec-title">
+      <h2>CME Open Interest</h2>
+      <span class="sec-tag">COMEX GC Futures · Notional USD</span>
+      <div class="sec-rule"></div>
+    </div>
+    <div class="g3" id="oi-cards">
+      <div class="card"><div class="loading"><span class="spin"></span>Loading OI…</div></div>
+    </div>
+  </div>
+
+  <!-- SOURCE MAP -->
+  <div>
+    <div class="sec-title">
+      <h2>Source Coverage</h2>
+      <span class="sec-tag">All Monitored Venues</span>
+      <div class="sec-rule"></div>
+    </div>
+    <div class="card">
+      <table class="tbl">
+        <thead><tr>
+          <th>Source</th><th>Measures</th><th>Granularity</th><th>Lag</th><th>Update</th>
+        </tr></thead>
+        <tbody>
+          <tr><td class="gold">CFTC COT</td><td>MM longs/shorts, commercials, non-reportable</td><td>Contract-level</td><td>~3 days</td><td><span class="badge b-weekly">Weekly</span></td></tr>
+          <tr><td class="gold">CME OI (GC=F)</td><td>Total outstanding contracts × 100 oz</td><td>Daily</td><td>Next day</td><td><span class="badge b-daily">Daily</span></td></tr>
+          <tr><td class="gold">GLD</td><td>SPDR Gold Shares AUM & holdings</td><td>Share-level</td><td>Same day</td><td><span class="badge b-daily">Daily</span></td></tr>
+          <tr><td class="gold">IAU</td><td>iShares Gold Trust AUM & holdings</td><td>Share-level</td><td>Same day</td><td><span class="badge b-daily">Daily</span></td></tr>
+          <tr><td class="gold">SGOL</td><td>Aberdeen Gold ETF AUM & holdings</td><td>Share-level</td><td>Same day</td><td><span class="badge b-daily">Daily</span></td></tr>
+          <tr><td class="gold">XAU/USD Spot</td><td>Real-time price, high, low, change</td><td>Tick</td><td>Real-time</td><td><span class="badge b-live">Live</span></td></tr>
+          <tr><td style="color:var(--muted)">LBMA Clearing</td><td>OTC interbank gold volume (opaque)</td><td>Monthly</td><td>~30 days</td><td><span class="badge b-weekly">Manual</span></td></tr>
+          <tr><td style="color:var(--muted)">WGC Demand</td><td>Mine supply, central bank, jewellery</td><td>Quarterly</td><td>~45 days</td><td><span class="badge b-weekly">Manual</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /body -->
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <span id="status-dot" class="status-warn">●</span>
+  <span id="status-msg">Connecting to backend at localhost:5000…</span>
+  <span style="margin-left:auto; color:var(--border2)">Gold Positioning Dashboard v2.0</span>
+</div>
+
+<script>
+const API = 'http://localhost:5000/api/gold';
+
+// ── UTILS ────────────────────────────────────
+const fmt   = (n, d=0) => n == null || isNaN(n) ? '—' : Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtB  = n => { if(!n) return '—'; if(Math.abs(n)>=1e9) return (n/1e9).toFixed(2)+'B'; if(Math.abs(n)>=1e6) return (n/1e6).toFixed(1)+'M'; if(Math.abs(n)>=1e3) return (n/1e3).toFixed(0)+'K'; return fmt(n); };
+const sign  = n => n >= 0 ? '+' : '';
+const cc    = n => n >= 0 ? 'bull' : 'bear';
+const arrow = n => n >= 0 ? '↑' : '↓';
+
+function setStatus(msg, type='ok') {
+  document.getElementById('status-dot').className  = `status-${type}`;
+  document.getElementById('status-dot').textContent = '●';
+  document.getElementById('status-msg').textContent = msg;
+}
+
+// ── SPOT ─────────────────────────────────────
+function renderSpot(s) {
+  document.getElementById('s-price').textContent = '$' + fmt(s.price, 2);
+  const chgEl = document.getElementById('s-chg');
+  chgEl.textContent = `${sign(s.change)}$${fmt(Math.abs(s.change),2)} (${sign(s.change_pct)}${fmt(s.change_pct,2)}%)`;
+  chgEl.className = 'spot-chg ' + cc(s.change);
+  document.getElementById('s-high').textContent = '$' + fmt(s.high, 2);
+  document.getElementById('s-low').textContent  = '$' + fmt(s.low,  2);
+  document.getElementById('s-src').textContent  = s.source || '—';
+}
+
+// ── COT ──────────────────────────────────────
+function renderCOT(cot) {
+  const mm   = cot.managed_money;
+  const comm = cot.commercials;
+  const lp   = mm.long_pct;
+
+  document.getElementById('cot-cards').innerHTML = `
+    <div class="card">
+      <div class="lbl">MM Long Contracts</div>
+      <div class="val bull">${fmt(mm.long)}</div>
+      <div class="sub bull">${sign(mm.long_chg)}${fmt(mm.long_chg)} this week</div>
+    </div>
+    <div class="card">
+      <div class="lbl">MM Short Contracts</div>
+      <div class="val bear">${fmt(mm.short)}</div>
+      <div class="sub bear">${sign(mm.short_chg)}${fmt(mm.short_chg)} this week</div>
+    </div>
+    <div class="card">
+      <div class="lbl">MM Net Position</div>
+      <div class="val ${cc(mm.net)}">${sign(mm.net)}${fmt(mm.net)}</div>
+      <div class="sub">${mm.net >= 0 ? 'Net Long' : 'Net Short'}</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Commercials Net</div>
+      <div class="val ${cc(comm.net)}">${sign(comm.net)}${fmt(comm.net)}</div>
+      <div class="sub">${comm.net < 0 ? 'Hedged Short' : 'Net Long'}</div>
+    </div>
+  `;
+
+  document.getElementById('cot-bar').innerHTML = `
+    <div class="lbl">Managed Money Sentiment — Long vs Short Ratio</div>
+    <div class="sent-bar-wrap">
+      <div class="sent-bar-row">
+        <span class="bull">${fmt(mm.long)} Long (${lp.toFixed(1)}%)</span>
+        <span style="color:var(--muted)">Total OI: ${fmt(cot.total_oi)}</span>
+        <span class="bear">${fmt(mm.short)} Short (${(100-lp).toFixed(1)}%)</span>
+      </div>
+      <div class="sent-track"><div class="sent-fill" style="width:${lp}%"></div></div>
+      <div class="sent-ends"><span>← Bearish</span><span>Bullish →</span></div>
+    </div>
+    <div class="fn">Source: ${cot.source} · Report date: ${cot.report_date}</div>
+  `;
+}
+
+// ── ETF ──────────────────────────────────────
+function renderETF(etf) {
+  const etfs = etf.etfs;
+  const tot  = etf.totals;
+
+  const cards = Object.entries(etfs).map(([ticker, e]) => {
+    if (e.error) return `
+      <div class="card">
+        <div class="lbl">${ticker} · ${e.name}</div>
+        <div class="err">Error: ${e.error}</div>
+      </div>`;
+    return `
+      <div class="card">
+        <div class="lbl">${ticker} · ${e.name}</div>
+        <div class="val">${'$'+fmt(e.price,2)}</div>
+        <div class="sub ${cc(e.change)}">${sign(e.change)}$${fmt(Math.abs(e.change),2)} today</div>
+        <div style="margin-top:10px; display:flex; gap:16px;">
+          <div>
+            <div class="lbl">AUM Est.</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.82rem;color:var(--gold)">$${fmtB(e.aum_usd)}</div>
+          </div>
+          <div>
+            <div class="lbl">Holdings</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.82rem;">${fmt(e.holdings_tonnes,1)} t</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('etf-section').innerHTML = `
+    <div class="g3">${cards}</div>
+    <div class="card" style="margin-top:12px">
+      <div class="etf-totals">
+        <div class="etf-total-item">
+          <div class="lbl">Total Tracked ETF AUM</div>
+          <div class="val gold">$${fmtB(tot.aum_usd)}</div>
+        </div>
+        <div class="etf-total-item">
+          <div class="lbl">Combined Holdings Est.</div>
+          <div class="val">${fmt(tot.tonnes,1)} <span style="font-size:0.8rem;color:var(--muted)">tonnes</span></div>
+        </div>
+        <div class="etf-total-item">
+          <div class="lbl">Holdings USD Value</div>
+          <div class="val gold">$${fmtB(tot.holdings_usd)}</div>
+        </div>
+      </div>
+      <div class="fn">Shares outstanding × oz/share × spot price. Official NAV from fund providers may differ slightly.</div>
+    </div>
+  `;
+}
+
+// ── OPEN INTEREST ─────────────────────────────
+function renderOI(oi) {
+  if (oi.error) {
+    document.getElementById('oi-cards').innerHTML = `<div class="card"><div class="err">OI Error: ${oi.error}</div></div>`;
+    return;
+  }
+  document.getElementById('oi-cards').innerHTML = `
+    <div class="card">
+      <div class="lbl">Open Interest (Contracts)</div>
+      <div class="val gold">${fmt(oi.contracts)}</div>
+      <div class="sub">× 100 troy oz per contract</div>
+    </div>
+    <div class="card">
+      <div class="lbl">OI in Troy Ounces</div>
+      <div class="val">${fmtB(oi.oz)} <span style="font-size:0.75rem;color:var(--muted)">oz</span></div>
+      <div class="sub">${fmt(oi.tonnes,0)} tonnes equivalent</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Notional Value (USD)</div>
+      <div class="val gold">$${fmtB(oi.notional_usd)}</div>
+      <div class="sub">Daily vol: ${fmt(oi.daily_volume)} contracts</div>
+    </div>
+  `;
+}
+
+// ── GAUGE & SIGNALS ───────────────────────────
+function renderSignal(sig) {
+  const score = sig.composite;
+  const label = sig.label;
+  const bias  = sig.bias;
+  const bd    = sig.breakdown;
+
+  const labelColor = bias === 'bull' ? 'var(--bull)' : bias === 'bear' ? 'var(--bear)' : 'var(--gold)';
+
+  // SVG gauge
+  const cx = 100, cy = 95, r = 78;
+  const startAngle = Math.PI;
+  const endAngle   = 0;
+  const angle = startAngle + (score / 100) * (endAngle - startAngle + Math.PI);
+  const nx = cx + r * Math.cos(angle - Math.PI);
+  const ny = cy + r * Math.sin(angle - Math.PI);
+
+  document.getElementById('gauge').innerHTML = `
+    <svg class="gauge-svg" viewBox="0 0 200 110">
+      <defs>
+        <linearGradient id="gg" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"   stop-color="#D95F5F"/>
+          <stop offset="50%"  stop-color="#C9A84C"/>
+          <stop offset="100%" stop-color="#4DB88A"/>
+        </linearGradient>
+      </defs>
+      <path d="M 22 95 A 78 78 0 0 1 178 95" fill="none" stroke="#1E1E1C" stroke-width="11" stroke-linecap="round"/>
+      <path d="M 22 95 A 78 78 0 0 1 178 95" fill="none" stroke="url(#gg)" stroke-width="11" stroke-linecap="round" opacity="0.55"/>
+      <line x1="${cx}" y1="${cy}" x2="${cx + r*0.82*Math.cos(angle-Math.PI)}" y2="${cy + r*0.82*Math.sin(angle-Math.PI)}"
+            stroke="var(--text)" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="${cx}" cy="${cy}" r="5" fill="var(--gold)"/>
+      <text x="18" y="110" font-family="IBM Plex Mono" font-size="8" fill="#D95F5F">BEAR</text>
+      <text x="152" y="110" font-family="IBM Plex Mono" font-size="8" fill="#4DB88A">BULL</text>
+      <text x="${cx}" y="78" text-anchor="middle" font-family="IBM Plex Mono" font-size="15" font-weight="600" fill="var(--text)">${score}</text>
+    </svg>
+    <div class="gauge-score-label" style="color:${labelColor}">${label}</div>
+    <div class="gauge-sub">0 = Max Bear · 100 = Max Bull</div>
+  `;
+
+  document.getElementById('signals').innerHTML = `
+    <div class="sig-card">
+      <div class="sig-name">COT (40%)</div>
+      <div class="sig-val ${bd.cot > 55 ? 'bull' : 'bear'}">${bd.cot}/100</div>
+      <div class="sig-sub">${bd.cot > 65 ? '↑ Funds net long' : bd.cot > 50 ? '↔ Neutral lean' : '↓ Funds shorting'}</div>
+    </div>
+    <div class="sig-card">
+      <div class="sig-name">ETF Flow (25%)</div>
+      <div class="sig-val ${bd.etf_flow > 50 ? 'bull' : 'bear'}">${bd.etf_flow.toFixed(0)}/100</div>
+      <div class="sig-sub">${bd.etf_flow > 55 ? '↑ ETF inflow' : bd.etf_flow < 45 ? '↓ ETF outflow' : '↔ Flat flow'}</div>
+    </div>
+    <div class="sig-card">
+      <div class="sig-name">Price Momentum (20%)</div>
+      <div class="sig-val ${bd.price_momentum > 50 ? 'bull' : 'bear'}">${bd.price_momentum.toFixed(0)}/100</div>
+      <div class="sig-sub">${bd.price_momentum > 55 ? '↑ Above prev close' : '↓ Below prev close'}</div>
+    </div>
+    <div class="sig-card">
+      <div class="sig-name">Open Interest (15%)</div>
+      <div class="sig-val ${bd.open_interest > 50 ? 'bull' : 'bear'}">${bd.open_interest}/100</div>
+      <div class="sig-sub">${bd.open_interest > 55 ? '↑ Elevated OI' : '↓ Below avg OI'}</div>
+    </div>
+  `;
+}
+
+// ── MAIN LOAD ─────────────────────────────────
+async function loadAll() {
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+  btn.textContent = '↻ Loading…';
+  setStatus('Fetching from backend…', 'warn');
+
+  try {
+    const r = await fetch(API, { cache: 'no-store' });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+
+    if (d.error) throw new Error(d.error);
+
+    // Render all sections
+    renderSpot(d.spot);
+    renderCOT(d.cot);
+    renderETF(d.etf);
+    renderOI(d.open_interest);
+    renderSignal(d.signal);
+
+    // Timestamp
+    const t = new Date(d.timestamp);
+    document.getElementById('ts').textContent =
+      t.toUTCString().replace(' GMT', '') + ' UTC';
+
+    setStatus('All data loaded · Sources: CFTC, Yahoo Finance, gold-api.com', 'ok');
+  } catch (e) {
+    setStatus(`Backend error: ${e.message} — Is server.py running? (python server.py)`, 'err');
+    document.getElementById('gauge').innerHTML =
+      `<div class="err" style="padding:12px">Cannot reach backend.<br>Run: <b>python server.py</b></div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '↻ Refresh';
+}
+
+// Auto-refresh every 5 minutes
+loadAll();
+setInterval(loadAll, 5 * 60 * 1000);
+</script>
+</body>
+</html>

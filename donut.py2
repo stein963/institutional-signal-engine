@@ -1,0 +1,77 @@
+import os
+import time
+import math
+
+# Clear screen once at the start
+os.system('cls' if os.name == 'nt' else 'clear')
+
+# -- YOUR CUSTOM TEXT --
+# Replace the standard shading characters with your chosen words
+# We keep them in the same order as the classic '@#$=' to simulate proper shading
+text = "hare krsna"
+num_chars = len(text)
+
+A = 0
+B = 0
+while True:
+    z = [0] * 1760
+    b = [' '] * 1760
+    for j in range(0, 628, 7): # j goes 0 to 2*pi
+        for i in range(0, 628, 2): # i goes 0 to 2*pi
+            
+            # Convert integer loops to radians for trig functions
+            phi = i / 100.0
+            theta = j / 100.0
+
+            # Precompute trigs
+            sinA, cosA = math.sin(A), math.cos(A)
+            sinB, cosB = math.sin(B), math.cos(B)
+            sini, cosi = math.sin(phi), math.cos(phi)
+            sinj, cosj = math.sin(theta), math.cos(theta)
+
+            h = cosj + 2
+            D = 1 / (sini * h * sinA + sinj * cosA + 5)
+            t = sini * h * cosA - sinj * sinA
+
+            # 3D -> 2D Perspective Projection
+            x = int(40 + 30 * D * (cosi * h * cosB - t * sinB))
+            y = int(12 + 15 * D * (cosi * h * sinB + t * cosB))
+            
+            # Final position in 1D array
+            o = int(x + 80 * y)
+            
+            # 3D Normal Vector for Shading Calculation
+            N = int(8 * ((sinj * sinA - sini * cosj * cosA) * cosB - sini * cosj * sinA - sinj * cosA - cosi * cosj * sinB))
+            
+            # Basic visibility and boundary check
+            if 22 > y > 0 and 80 > x > 0 and D > z[o]:
+                z[o] = D
+                
+                # --- NEW SHADING LOGIC ---
+                # N will typically be in the range -8 to +8.
+                # We normalize it and map it directly to the length of our 'hare krsna' string.
+                
+                # Normalize N to a 0-1 range
+                normalized_n = (N + 8) / 16.0
+                
+                # Scale that 0-1 range to the indices of our text
+                text_index = int(normalized_n * (num_chars - 1))
+                
+                # Ensure the index is safe and valid
+                if text_index < 0: text_index = 0
+                if text_index >= num_chars: text_index = num_chars - 1
+                
+                # Assign the character from our text at the calculated index
+                b[o] = text[text_index]
+
+    # Clear terminal and print frame
+    print('\x1b[H', end='')
+    for k in range(1761):
+        print(b[k] if k % 80 else '\n', end='')
+    
+    # Increase rotation angles
+    A += 0.04
+    B += 0.02
+    
+    # Minimal pause for smooth animation
+    time.sleep(0.01)

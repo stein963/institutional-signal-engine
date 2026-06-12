@@ -1,0 +1,11 @@
+report,rows,columns,date_min,date_max
+legacy_futures_only,409,133,2021-06-15T00:00:00.000,2026-06-02T00:00:00.000
+legacy_combined,409,133,2021-06-15T00:00:00.000,2026-06-02T00:00:00.000
+disaggregated_futures_only,409,194,2021-06-15T00:00:00.000,2026-06-02T00:00:00.000
+disaggregated_combined,409,194,2021-06-15T00:00:00.000,2026-06-02T00:00:00.000
+tff_futures_only,0,0,–,–
+tff_combined,0,0,–,–
+supplemental_cit,0,0,–,–
+bank_participation_report,0,0,–,–
+weekly_swaps_gold,0,0,–,–
+sec_13f_13g_gold_etfs,0,0,–,–
